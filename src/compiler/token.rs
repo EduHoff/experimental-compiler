@@ -12,12 +12,6 @@ pub enum TokenType {
     Continue,
     Goto,
 
-    // --- Modifier & Visibility Keywords ---
-    Public,
-    Protected,
-    Private,
-    Async,
-
     // --- Built-in Data Types ---
     Void,
     Int,
@@ -103,7 +97,7 @@ pub enum TokenType {
 
 #[derive(Debug, Clone)]
 pub struct Token {
-    token_type: TokenType,
+    kind: TokenType,
     value: Option<String>,
     line: usize,
     column: usize,
@@ -111,9 +105,9 @@ pub struct Token {
 }
 
 impl Token {
-    pub fn new(value: Option<String>, token_type: TokenType, line: usize, column: usize) -> Self {
+    pub const fn new(value: Option<String>, kind: TokenType, line: usize, column: usize) -> Self {
         Token {
-            token_type,
+            kind,
             value,
             line,
             column,
@@ -121,19 +115,19 @@ impl Token {
         }
     }
 
-    pub fn token_type(&self) -> &TokenType {
-        &self.token_type
+    pub const fn kind(&self) -> &TokenType {
+        &self.kind
     }
 
-    pub fn value(&self) -> Option<&String> {
+    pub const fn value(&self) -> Option<&String> {
         self.value.as_ref()
     }
 
-    pub fn line(&self) -> &usize {
+    pub const fn line(&self) -> &usize {
         &self.line
     }
 
-    pub fn column(&self) -> &usize {
+    pub const fn column(&self) -> &usize {
         &self.column
     }
 }

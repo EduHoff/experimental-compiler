@@ -47,7 +47,7 @@ fn read_identifier_or_keyword(
         }
     }
 
-    let token_type: TokenType = match buf.as_str() {
+    let kind: TokenType = match buf.as_str() {
         "import" => TokenType::Import,
         "return" => TokenType::Return,
         "if" => TokenType::If,
@@ -58,10 +58,6 @@ fn read_identifier_or_keyword(
         "break" => TokenType::Break,
         "continue" => TokenType::Continue,
         "goto" => TokenType::Goto,
-        "public" => TokenType::Public,
-        "protected" => TokenType::Protected,
-        "private" => TokenType::Private,
-        "async" => TokenType::Async,
         "void" => TokenType::Void,
         "int" => TokenType::Int,
         "double" => TokenType::Double,
@@ -72,7 +68,7 @@ fn read_identifier_or_keyword(
         _ => TokenType::Ident,
     };
 
-    Token::new(Some(buf), token_type, current_line, current_column)
+    Token::new(Some(buf), kind, current_line, current_column)
 }
 
 fn read_number_literal(chars: &mut Peekable<Chars>, line: &mut usize, column: &mut usize) -> Token {
@@ -104,19 +100,19 @@ fn read_number_literal(chars: &mut Peekable<Chars>, line: &mut usize, column: &m
         }
     }
 
-    let token_type = if has_dot == 1 {
-        if has_fractional_part {
-            TokenType::DoubleLit
-        } else {
-            TokenType::Invalid
+    let kind = match has_dot {
+        1 => {
+            if has_fractional_part {
+                TokenType::DoubleLit
+            } else {
+                TokenType::Invalid
+            }
         }
-    } else if has_dot > 1 {
-        TokenType::Invalid
-    } else {
-        TokenType::IntLit
+        n if n > 1 => TokenType::Invalid,
+        _ => TokenType::IntLit,
     };
 
-    Token::new(Some(buf), token_type, current_line, current_column)
+    Token::new(Some(buf), kind, current_line, current_column)
 }
 
 fn read_string(chars: &mut Peekable<Chars>, line: &mut usize, column: &mut usize) -> Token {
@@ -223,7 +219,7 @@ fn read_operator_or_punctuation(
     let current_column = *column;
 
     if let Some(&c) = chars.peek() {
-        let token_type = match c {
+        let kind = match c {
             ';' => Some(TokenType::Semi),
             ',' => Some(TokenType::Comma),
             '.' => Some(TokenType::Dot),
@@ -238,7 +234,7 @@ fn read_operator_or_punctuation(
             _ => None,
         };
 
-        if let Some(t_type) = token_type {
+        if let Some(t_type) = kind {
             buf.push(c);
             advance(chars, line, column);
             return Token::new(Some(buf), t_type, current_line, current_column);
@@ -372,21 +368,13 @@ fn read_operator_or_punctuation(
                         }
                     }
 
-                    if closed {
-                        return Token::new(
-                            Some(buf),
-                            TokenType::BlockComment,
-                            current_line,
-                            current_column,
-                        );
+                    let kind = if closed {
+                        TokenType::BlockComment
                     } else {
-                        return Token::new(
-                            Some(buf),
-                            TokenType::Invalid,
-                            current_line,
-                            current_column,
-                        );
-                    }
+                        TokenType::Invalid
+                    };
+
+                    return Token::new(Some(buf), kind, current_line, current_column);
                 }
                 _ => {
                     return Token::new(Some(buf), TokenType::Slash, current_line, current_column);
